@@ -202,19 +202,6 @@
   .admin-link { position:fixed; bottom:16px; left:16px; font-size:11px; color:rgba(253,246,232,0.15); cursor:pointer; z-index:10; }
   .section-title { font-size:12px; letter-spacing:3px; color:var(--gold); margin-bottom:12px; opacity:0.8; }
   .guests-list::-webkit-scrollbar { width:4px; }
-  .delete-btn {
-    background: transparent;
-    border: 1px solid rgba(231,76,60,0.3);
-    color: rgba(231,76,60,0.6);
-    font-size: 11px;
-    padding: 4px 10px;
-    border-radius: 3px;
-    cursor: pointer;
-    font-family: 'Noto Serif Hebrew', serif;
-    transition: all 0.2s;
-    white-space: nowrap;
-  }
-  .delete-btn:hover { background: rgba(231,76,60,0.1); color: #e74c3c; border-color: #e74c3c; }
   .guests-list::-webkit-scrollbar-thumb { background:rgba(201,150,58,0.3); border-radius:2px; }
 </style>
 </head>
@@ -245,7 +232,7 @@
       <div class="location-sub">קיבוץ נחשונים</div>
     </div>
 
-    <a class="btn-waze-full" href="https://waze.com/ul/hsv8y7k83p" target="_blank">
+    <a class="btn-waze-full" href="https://waze.com/ul?q=מטבח+קיבוץ+נחשונים&navigate=yes" target="_blank">
       🧭 ניווט ל-Waze ←
     </a>
 
@@ -265,14 +252,6 @@
     <div class="form-group">
       <label class="form-label">שם מלא</label>
       <input class="form-input" id="guestName" type="text" placeholder="הכנס/י את שמך המלא" />
-    </div>
-
-    <div class="form-group">
-      <label class="form-label">טלפון</label>
-      <input class="form-input" id="guestPhone" type="tel" placeholder="050-0000000" />
-      <div style="font-size:11px; color:rgba(253,246,232,0.35); margin-top:6px; letter-spacing:0.5px;">
-        ⚠️ חשוב: יש להזין את הטלפון הנכון שלך לצורך זיהוי
-      </div>
     </div>
 
     <div class="form-group">
@@ -347,7 +326,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, push, onValue, serverTimestamp, remove }
+  import { getDatabase, ref, push, onValue, serverTimestamp }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
   const firebaseConfig = {
@@ -365,12 +344,10 @@
   const rsvpRef = ref(db, 'henna_rsvp');
 
   window._db = db;
-  window._ref = ref;
   window._rsvpRef = rsvpRef;
   window._push = push;
   window._onValue = onValue;
   window._serverTimestamp = serverTimestamp;
-  window._remove = remove;
   window._firebaseReady = true;
   window.dispatchEvent(new Event('firebaseReady'));
 </script>
@@ -405,21 +382,16 @@
 
   function checkForm() {
     const name = document.getElementById('guestName').value.trim();
-    const phone = document.getElementById('guestPhone').value.trim();
-    document.getElementById('submitBtn').disabled = !(name.length >= 2 && phone.length >= 9 && attending !== null);
+    document.getElementById('submitBtn').disabled = !(name.length >= 2 && attending !== null);
   }
   document.getElementById('guestName').addEventListener('input', checkForm);
-  document.getElementById('guestPhone').addEventListener('input', checkForm);
 
   async function submitRSVP() {
     const name = document.getElementById('guestName').value.trim();
     if (!name || attending === null) return;
     const btn = document.getElementById('submitBtn');
     btn.disabled = true; btn.textContent = 'שולח...';
-    const rawPhone = document.getElementById('guestPhone').value.trim();
-    let phone = rawPhone.replace(/[-\s().+]/g, '');
-    if (phone.startsWith('972')) phone = '0' + phone.slice(3);
-    const data = { name, phone, attending, guests: attending ? guestCount : 0,
+    const data = { name, attending, guests: attending ? guestCount : 0,
       timestamp: window._serverTimestamp ? window._serverTimestamp() : Date.now() };
     try {
       if (window._firebaseReady) await window._push(window._rsvpRef, data);
@@ -428,7 +400,7 @@
       const msg = document.getElementById('successMsg');
       if (attending) {
         icon.textContent = '🎉'; title.textContent = 'מחכים לך!';
-        msg.innerHTML = `${name} יקיר/ה,<br>אישרת הגעה ל<strong>${guestCount}</strong> אנשים.<br><br>נשמח לראותך בחינה! 🌿<br><br><span style="font-size:12px;opacity:0.6;">⚠️ אם הטלפון שרשמת שגוי — האישור לא יזוהה. במקרה של טעות, אנא מלא את הטופס שוב עם הטלפון הנכון.</span>`;
+        msg.innerHTML = `${name} יקיר/ה,<br>אישרת הגעה ל<strong>${guestCount}</strong> אנשים.<br><br>נשמח לראותך בחינה! 🌿`;
       } else {
         icon.textContent = '💛'; title.textContent = 'תודה על העדכון';
         msg.innerHTML = `${name} יקיר/ה,<br>קיבלנו את הודעתך.<br><br>יהיה חסר לנו. שיהיה בשעה טובה! 🌿`;
@@ -473,41 +445,16 @@
       document.getElementById('statTotal').textContent = entries.length;
       document.getElementById('statComing').textContent = coming.length;
       document.getElementById('statGuests').textContent = totalGuests;
-      const entriesWithKeys = Object.entries(data);
-      entriesWithKeys.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
-      list.innerHTML = entriesWithKeys.map(([key, e]) => `
+      entries.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      list.innerHTML = entries.map(e => `
         <div class="guest-row">
           <div class="guest-name">${e.name}</div>
           ${e.attending ? `<div class="guest-count">${e.guests} אנשים</div>` : ''}
           <div class="guest-badge ${e.attending ? 'badge-yes' : 'badge-no'}">${e.attending ? 'מגיע' : 'לא מגיע'}</div>
-          <button class="delete-btn" onclick="deleteRsvp('${key}', '${e.name}')">מחק</button>
         </div>`).join('');
     });
   }
   window.loadAdminData = loadAdminData;
-
-  // ===== DELETE RSVP =====
-  async function deleteRsvp(key, name) {
-    const first = confirm(`האם אתה בטוח שרוצה למחוק את ${name}?`);
-    if (!first) return;
-    const second = confirm(`⚠️ שים לב! מחיקה של ${name} היא סופית ולא ניתן לשחזר.\nלהמשיך?`);
-    if (!second) return;
-
-    try {
-      // המתן ל-Firebase אם צריך
-      let attempts = 0;
-      while (!window._ref || !window._db || !window._remove) {
-        await new Promise(r => setTimeout(r, 300));
-        attempts++;
-        if (attempts > 20) { alert('Firebase לא זמין, נסה שוב'); return; }
-      }
-      const entryRef = window._ref(window._db, 'henna_rsvp/' + key);
-      await window._remove(entryRef);
-    } catch(e) {
-      alert('שגיאה במחיקה: ' + e.message);
-    }
-  }
-  window.deleteRsvp = deleteRsvp;
 </script>
 </body>
 </html>
