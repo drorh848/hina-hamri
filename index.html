@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>חינה | אמרי וליטל חמרי</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Noto+Serif+Hebrew:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #c9963a;
+    --gold-light: #e8c06a;
+    --gold-dark: #8a6020;
+    --deep: #1a0e05;
+    --warm: #2d1a08;
+    --cream: #fdf6e8;
+    --henna: #7a2e0e;
+    --henna-light: #c4622d;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Serif Hebrew', serif;
+    background: var(--deep);
+    color: var(--cream);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .bg-pattern {
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 20% 20%, rgba(201,150,58,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(122,46,14,0.12) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 50%, rgba(45,26,8,1) 0%, rgba(26,14,5,1) 100%);
+    z-index: 0;
+  }
+
+  .mandala-bg {
+    position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  }
+  .mandala-bg svg { position: absolute; opacity: 0.04; }
+  .mandala-bg svg:nth-child(1) { top: -200px; right: -200px; width: 600px; }
+  .mandala-bg svg:nth-child(2) { bottom: -200px; left: -200px; width: 500px; }
+
+  .page {
+    display: none; position: relative; z-index: 1;
+    min-height: 100vh; padding: 40px 20px;
+    animation: fadeIn 0.6s ease;
+  }
+  .page.active { display: flex; flex-direction: column; align-items: center; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .gold-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 16px 0; width: 100%; max-width: 340px;
+  }
+  .gold-divider::before, .gold-divider::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .gold-divider span { color: var(--gold); font-size: 18px; }
+
+  /* ===== INVITATION ===== */
+  .invite-card { max-width: 420px; width: 100%; text-align: center; }
+
+  .invite-top-ornament {
+    font-size: 32px; color: var(--gold); letter-spacing: 8px;
+    margin-bottom: 8px; animation: shimmer 3s ease-in-out infinite;
+  }
+  @keyframes shimmer { 0%,100%{opacity:0.7} 50%{opacity:1} }
+
+  .event-label {
+    font-size: 13px; letter-spacing: 6px; color: var(--gold-light);
+    text-transform: uppercase; margin-bottom: 20px; opacity: 0.8;
+  }
+
+  .invite-image-container {
+    width: 100%; max-width: 380px; margin: 0 auto 20px;
+    border-radius: 4px; overflow: hidden;
+    border: 1px solid rgba(201,150,58,0.3);
+    box-shadow: 0 0 40px rgba(201,150,58,0.1), 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .invite-image-container img { width: 100%; display: block; }
+
+  /* ===== BOTTOM SECTION ===== */
+  .waiting-text {
+    font-size: 15px; color: #e8c06a;
+    margin: 12px 0; letter-spacing: 1px;
+  }
+
+  .location-box {
+    background: rgba(201,150,58,0.08);
+    border: 1px solid rgba(201,150,58,0.25);
+    border-radius: 4px; padding: 14px 16px;
+    margin: 12px 0; text-align: center; width: 100%; max-width: 340px;
+  }
+  .location-name { font-size: 14px; color: #fdf6e8; font-weight: 600; margin-bottom: 4px; }
+  .location-sub { font-size: 12px; color: rgba(253,246,232,0.45); }
+
+  .btn-waze-full {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; max-width: 340px; padding: 14px;
+    background: linear-gradient(135deg, #1a5276, #2980b9);
+    border: none; border-radius: 3px; color: white;
+    font-family: 'Noto Serif Hebrew', serif; font-size: 15px;
+    cursor: pointer; text-decoration: none;
+    box-shadow: 0 4px 15px rgba(41,128,185,0.3);
+    margin-bottom: 10px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-waze-full:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(41,128,185,0.4); }
+
+  .rsvp-btn {
+    width: 100%; max-width: 340px; padding: 16px;
+    background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-dark));
+    background-size: 200% 200%; border: none; border-radius: 2px;
+    color: var(--deep); font-family: 'Noto Serif Hebrew', serif;
+    font-size: 16px; font-weight: 600; letter-spacing: 2px;
+    cursor: pointer; animation: goldShift 4s ease infinite;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 20px rgba(201,150,58,0.3);
+  }
+  .rsvp-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(201,150,58,0.5); }
+  @keyframes goldShift {
+    0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%}
+  }
+
+  /* ===== RSVP FORM ===== */
+  .form-card { max-width: 420px; width: 100%; }
+  .form-title { font-family:'Playfair Display',serif; font-size:24px; color:var(--gold-light); text-align:center; margin-bottom:6px; }
+  .form-subtitle { font-size:13px; color:rgba(253,246,232,0.5); text-align:center; margin-bottom:24px; letter-spacing:1px; }
+  .form-group { margin-bottom: 20px; }
+  .form-label { display:block; font-size:13px; color:var(--gold); letter-spacing:2px; margin-bottom:8px; }
+  .form-input {
+    width:100%; padding:14px 16px; background:rgba(255,255,255,0.05);
+    border:1px solid rgba(201,150,58,0.3); border-radius:2px; color:var(--cream);
+    font-family:'Noto Serif Hebrew',serif; font-size:16px; outline:none; transition:border-color 0.3s;
+  }
+  .form-input:focus { border-color:var(--gold); background:rgba(201,150,58,0.08); }
+
+  .attendance-toggle { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .toggle-btn {
+    padding:14px; background:rgba(255,255,255,0.04);
+    border:1px solid rgba(201,150,58,0.25); border-radius:2px;
+    color:rgba(253,246,232,0.6); font-family:'Noto Serif Hebrew',serif;
+    font-size:15px; cursor:pointer; transition:all 0.3s; text-align:center;
+  }
+  .toggle-btn.selected-yes { background:rgba(201,150,58,0.2); border-color:var(--gold); color:var(--gold-light); }
+  .toggle-btn.selected-no { background:rgba(122,46,14,0.2); border-color:var(--henna-light); color:var(--henna-light); }
+
+  .count-selector { display:flex; align-items:center; border:1px solid rgba(201,150,58,0.3); border-radius:2px; overflow:hidden; }
+  .count-btn { width:50px; height:50px; background:rgba(201,150,58,0.1); border:none; color:var(--gold); font-size:22px; cursor:pointer; flex-shrink:0; }
+  .count-btn:hover { background:rgba(201,150,58,0.25); }
+  .count-display { flex:1; text-align:center; font-size:22px; color:var(--cream); background:rgba(255,255,255,0.03); padding:10px; }
+
+  .submit-btn {
+    width:100%; padding:16px;
+    background:linear-gradient(135deg,var(--henna),var(--henna-light),var(--henna));
+    background-size:200%; border:none; border-radius:2px; color:var(--cream);
+    font-family:'Noto Serif Hebrew',serif; font-size:16px; font-weight:600;
+    letter-spacing:2px; cursor:pointer; transition:all 0.3s;
+    box-shadow:0 4px 20px rgba(122,46,14,0.4); margin-top:10px;
+  }
+  .submit-btn:disabled { opacity:0.5; cursor:not-allowed; }
+  .back-link { text-align:center; margin-top:16px; font-size:13px; color:rgba(253,246,232,0.4); cursor:pointer; }
+  .back-link:hover { color:var(--gold); }
+
+  /* ===== SUCCESS ===== */
+  .success-card { max-width:380px; width:100%; text-align:center; }
+  .success-icon { font-size:64px; margin-bottom:20px; animation:popIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275); }
+  @keyframes popIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+  .success-title { font-family:'Playfair Display',serif; font-size:26px; color:var(--gold-light); margin-bottom:12px; }
+  .success-msg { font-size:15px; color:rgba(253,246,232,0.7); line-height:1.8; }
+
+  /* ===== ADMIN ===== */
+  .admin-card { max-width:600px; width:100%; }
+  .admin-header { text-align:center; margin-bottom:30px; }
+  .admin-title { font-family:'Playfair Display',serif; font-size:22px; color:var(--gold-light); margin-bottom:4px; }
+  .admin-subtitle { font-size:12px; color:rgba(253,246,232,0.4); letter-spacing:2px; }
+  .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:24px; }
+  .stat-box { background:rgba(201,150,58,0.08); border:1px solid rgba(201,150,58,0.2); border-radius:4px; padding:16px 10px; text-align:center; }
+  .stat-num { font-family:'Playfair Display',serif; font-size:32px; color:var(--gold-light); line-height:1; margin-bottom:4px; }
+  .stat-label { font-size:11px; color:rgba(253,246,232,0.5); letter-spacing:1px; }
+  .guests-list { display:flex; flex-direction:column; gap:8px; max-height:400px; overflow-y:auto; }
+  .guest-row { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:rgba(255,255,255,0.03); border:1px solid rgba(201,150,58,0.1); border-radius:3px; gap:10px; }
+  .guest-name { font-size:15px; color:var(--cream); flex:1; }
+  .guest-count { font-size:13px; color:rgba(253,246,232,0.5); white-space:nowrap; }
+  .guest-badge { padding:4px 10px; border-radius:20px; font-size:11px; letter-spacing:1px; white-space:nowrap; }
+  .badge-yes { background:rgba(201,150,58,0.2); color:var(--gold-light); border:1px solid rgba(201,150,58,0.4); }
+  .badge-no { background:rgba(122,46,14,0.2); color:var(--henna-light); border:1px solid rgba(122,46,14,0.4); }
+  .empty-state { text-align:center; padding:40px; color:rgba(253,246,232,0.3); font-size:14px; }
+  .logout-btn { margin-top:20px; width:100%; padding:12px; background:transparent; border:1px solid rgba(201,150,58,0.2); border-radius:2px; color:rgba(253,246,232,0.4); font-family:'Noto Serif Hebrew',serif; font-size:13px; cursor:pointer; transition:all 0.3s; letter-spacing:2px; }
+  .logout-btn:hover { border-color:var(--gold); color:var(--gold); }
+  .login-card { max-width:360px; width:100%; text-align:center; }
+  .error-msg { color:var(--henna-light); font-size:13px; margin-top:8px; display:none; }
+  .admin-link { position:fixed; bottom:16px; left:16px; font-size:11px; color:rgba(253,246,232,0.15); cursor:pointer; z-index:10; }
+  .section-title { font-size:12px; letter-spacing:3px; color:var(--gold); margin-bottom:12px; opacity:0.8; }
+  .guests-list::-webkit-scrollbar { width:4px; }
+  .delete-btn {
+    background: transparent;
+    border: 1px solid rgba(231,76,60,0.3);
+    color: rgba(231,76,60,0.6);
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-family: 'Noto Serif Hebrew', serif;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .delete-btn:hover { background: rgba(231,76,60,0.1); color: #e74c3c; border-color: #e74c3c; }
+  .guests-list::-webkit-scrollbar-thumb { background:rgba(201,150,58,0.3); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<div class="bg-pattern"></div>
+<div class="mandala-bg">
+  <svg viewBox="0 0 400 400" fill="none"><circle cx="200" cy="200" r="190" stroke="#c9963a" stroke-width="1"/><circle cx="200" cy="200" r="110" stroke="#c9963a" stroke-width="1"/><circle cx="200" cy="200" r="30" stroke="#c9963a" stroke-width="1"/><line x1="200" y1="10" x2="200" y2="390" stroke="#c9963a" stroke-width="0.5"/><line x1="10" y1="200" x2="390" y2="200" stroke="#c9963a" stroke-width="0.5"/><polygon points="200,20 380,200 200,380 20,200" stroke="#c9963a" stroke-width="0.5" fill="none"/></svg>
+  <svg viewBox="0 0 400 400" fill="none"><circle cx="200" cy="200" r="190" stroke="#7a2e0e" stroke-width="1"/><circle cx="200" cy="200" r="90" stroke="#7a2e0e" stroke-width="1"/><polygon points="200,10 390,200 200,390 10,200" stroke="#7a2e0e" stroke-width="0.5" fill="none"/></svg>
+</div>
+
+<!-- PAGE 1: INVITATION -->
+<div class="page active" id="page-invite">
+  <div class="invite-card">
+    <div class="invite-top-ornament">✦ ✦ ✦</div>
+    <div class="event-label">הזמנה לחינה</div>
+
+    <div class="invite-image-container">
+      <img src="galoya.jpg" alt="הזמנה לחינה">
+    </div>
+
+    <div class="gold-divider"><span>✦</span></div>
+
+    <div class="waiting-text">💛 מחכים לחגוג ולהתרגש איתכם 💛</div>
+
+    <div class="location-box">
+      <div class="location-name">📍 מתחם מסעדה | חדר אוכל קיבוץ נחשונים</div>
+      <div class="location-sub">קיבוץ נחשונים</div>
+    </div>
+
+    <a class="btn-waze-full" href="https://waze.com/ul/hsv8y7k83p" target="_blank">
+      🧭 ניווט ל-Waze ←
+    </a>
+
+    <button class="rsvp-btn" onclick="showPage('page-rsvp')">
+      ✅ אישור הגעה ←
+    </button>
+  </div>
+</div>
+
+<!-- PAGE 2: RSVP FORM -->
+<div class="page" id="page-rsvp">
+  <div class="form-card">
+    <div class="form-title">אישור הגעה</div>
+    <div class="form-subtitle">חינה | אמרי וליטל</div>
+    <div class="gold-divider"><span>✦</span></div>
+
+    <div class="form-group">
+      <label class="form-label">שם מלא</label>
+      <input class="form-input" id="guestName" type="text" placeholder="הכנס/י את שמך המלא" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">טלפון</label>
+      <input class="form-input" id="guestPhone" type="tel" placeholder="050-0000000" />
+      <div style="font-size:11px; color:rgba(253,246,232,0.35); margin-top:6px; letter-spacing:0.5px;">
+        ⚠️ חשוב: יש להזין את הטלפון הנכון שלך לצורך זיהוי
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">האם תגיע/י?</label>
+      <div class="attendance-toggle">
+        <button class="toggle-btn" id="btnYes" onclick="setAttendance(true)">✅ כן, אגיע</button>
+        <button class="toggle-btn" id="btnNo" onclick="setAttendance(false)">❌ לא אגיע</button>
+      </div>
+    </div>
+
+    <div class="form-group" id="countGroup" style="display:none;">
+      <label class="form-label">כמה אנשים מגיעים (כולל עצמך)?</label>
+      <div class="count-selector">
+        <button class="count-btn" onclick="changeCount(-1)">−</button>
+        <div class="count-display" id="countDisplay">1</div>
+        <button class="count-btn" onclick="changeCount(1)">+</button>
+      </div>
+    </div>
+
+    <button class="submit-btn" id="submitBtn" onclick="submitRSVP()" disabled>שלח אישור</button>
+    <div class="back-link" onclick="showPage('page-invite')">← חזרה להזמנה</div>
+  </div>
+</div>
+
+<!-- PAGE 3: SUCCESS -->
+<div class="page" id="page-success">
+  <div class="success-card">
+    <div class="success-icon" id="successIcon">✅</div>
+    <div class="success-title" id="successTitle">תודה רבה!</div>
+    <div class="gold-divider"><span>✦</span></div>
+    <div class="success-msg" id="successMsg">קיבלנו את אישורך.<br>מחכים לך בחינה! 🌿</div>
+  </div>
+</div>
+
+<!-- PAGE 4: ADMIN LOGIN -->
+<div class="page" id="page-login">
+  <div class="login-card">
+    <div class="invite-top-ornament" style="margin-bottom:16px;">🔐</div>
+    <div class="form-title" style="margin-bottom:6px;">לוח בקרה</div>
+    <div class="form-subtitle" style="margin-bottom:24px;">כניסה לחתן ולכלה</div>
+    <div class="gold-divider"><span>✦</span></div>
+    <div class="form-group" style="margin-top:20px;">
+      <label class="form-label">סיסמה</label>
+      <input class="form-input" id="adminPass" type="password" placeholder="הכנס סיסמה"
+        onkeydown="if(event.key==='Enter') doLogin()" />
+      <div class="error-msg" id="loginError">❌ סיסמה שגויה</div>
+    </div>
+    <button class="rsvp-btn" onclick="doLogin()">כניסה</button>
+    <div class="back-link" onclick="showPage('page-invite')" style="margin-top:12px;">← חזרה</div>
+  </div>
+</div>
+
+<!-- PAGE 5: ADMIN DASHBOARD -->
+<div class="page" id="page-admin">
+  <div class="admin-card">
+    <div class="admin-header">
+      <div class="admin-title">לוח בקרה | חינה</div>
+      <div class="admin-subtitle">אמרי וליטל חמרי · 23.9.2026</div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-num" id="statTotal">0</div><div class="stat-label">נרשמו</div></div>
+      <div class="stat-box"><div class="stat-num" id="statComing" style="color:var(--gold-light);">0</div><div class="stat-label">מגיעים</div></div>
+      <div class="stat-box"><div class="stat-num" id="statGuests" style="color:var(--henna-light);">0</div><div class="stat-label">סה"כ אנשים</div></div>
+    </div>
+    <div class="section-title">רשימת מאשרים</div>
+    <div class="guests-list" id="guestsList"><div class="empty-state">טוען...</div></div>
+    <button class="logout-btn" onclick="showPage('page-invite')">← יציאה</button>
+  </div>
+</div>
+
+<div class="admin-link" onclick="showPage('page-login')">⚙</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getDatabase, ref, push, onValue, serverTimestamp, remove }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAMRwapWhuzScVtatbQhykIGMldgEacndQ",
+    authDomain: "henna-hamri.firebaseapp.com",
+    databaseURL: "https://henna-hamri-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "henna-hamri",
+    storageBucket: "henna-hamri.firebasestorage.app",
+    messagingSenderId: "578518609000",
+    appId: "1:578518609000:web:1726b2dc107a7e716d9fdd"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const rsvpRef = ref(db, 'henna_rsvp');
+
+  window._db = db;
+  window._rsvpRef = rsvpRef;
+  window._push = push;
+  window._onValue = onValue;
+  window._serverTimestamp = serverTimestamp;
+  window._remove = remove;
+  window._firebaseReady = true;
+  window.dispatchEvent(new Event('firebaseReady'));
+</script>
+
+<script>
+  let attending = null;
+  let guestCount = 1;
+  const ADMIN_PASSWORD = "Hamri2026";
+
+  function showPage(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+    if (id === 'page-admin') loadAdminData();
+  }
+  window.showPage = showPage;
+
+  function setAttendance(val) {
+    attending = val;
+    document.getElementById('btnYes').className = 'toggle-btn' + (val ? ' selected-yes' : '');
+    document.getElementById('btnNo').className = 'toggle-btn' + (!val ? ' selected-no' : '');
+    document.getElementById('countGroup').style.display = val ? 'block' : 'none';
+    checkForm();
+  }
+  window.setAttendance = setAttendance;
+
+  function changeCount(delta) {
+    guestCount = Math.max(1, Math.min(20, guestCount + delta));
+    document.getElementById('countDisplay').textContent = guestCount;
+  }
+  window.changeCount = changeCount;
+
+  function checkForm() {
+    const name = document.getElementById('guestName').value.trim();
+    const phone = document.getElementById('guestPhone').value.trim();
+    document.getElementById('submitBtn').disabled = !(name.length >= 2 && phone.length >= 9 && attending !== null);
+  }
+  document.getElementById('guestName').addEventListener('input', checkForm);
+  document.getElementById('guestPhone').addEventListener('input', checkForm);
+
+  async function submitRSVP() {
+    const name = document.getElementById('guestName').value.trim();
+    if (!name || attending === null) return;
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true; btn.textContent = 'שולח...';
+    const rawPhone = document.getElementById('guestPhone').value.trim();
+    let phone = rawPhone.replace(/[-\s().+]/g, '');
+    if (phone.startsWith('972')) phone = '0' + phone.slice(3);
+    const data = { name, phone, attending, guests: attending ? guestCount : 0,
+      timestamp: window._serverTimestamp ? window._serverTimestamp() : Date.now() };
+    try {
+      if (window._firebaseReady) await window._push(window._rsvpRef, data);
+      const icon = document.getElementById('successIcon');
+      const title = document.getElementById('successTitle');
+      const msg = document.getElementById('successMsg');
+      if (attending) {
+        icon.textContent = '🎉'; title.textContent = 'מחכים לך!';
+        msg.innerHTML = `${name} יקיר/ה,<br>אישרת הגעה ל<strong>${guestCount}</strong> אנשים.<br><br>נשמח לראותך בחינה! 🌿<br><br><span style="font-size:12px;opacity:0.6;">⚠️ אם הטלפון שרשמת שגוי — האישור לא יזוהה. במקרה של טעות, אנא מלא את הטופס שוב עם הטלפון הנכון.</span>`;
+      } else {
+        icon.textContent = '💛'; title.textContent = 'תודה על העדכון';
+        msg.innerHTML = `${name} יקיר/ה,<br>קיבלנו את הודעתך.<br><br>יהיה חסר לנו. שיהיה בשעה טובה! 🌿`;
+      }
+      showPage('page-success');
+    } catch(e) {
+      btn.disabled = false; btn.textContent = 'שלח אישור';
+      alert('שגיאה בשליחה. בדוק חיבור אינטרנט.');
+    }
+  }
+  window.submitRSVP = submitRSVP;
+
+  function doLogin() {
+    const pass = document.getElementById('adminPass').value;
+    const err = document.getElementById('loginError');
+    if (pass === ADMIN_PASSWORD) {
+      err.style.display = 'none';
+      document.getElementById('adminPass').value = '';
+      showPage('page-admin');
+    } else { err.style.display = 'block'; }
+  }
+  window.doLogin = doLogin;
+
+  function loadAdminData() {
+    if (!window._firebaseReady) {
+      document.getElementById('guestsList').innerHTML = '<div class="empty-state">Firebase לא מוגדר</div>';
+      return;
+    }
+    window._onValue(window._rsvpRef, (snapshot) => {
+      const data = snapshot.val();
+      const list = document.getElementById('guestsList');
+      if (!data) {
+        list.innerHTML = '<div class="empty-state">אין אישורים עדיין</div>';
+        document.getElementById('statTotal').textContent = 0;
+        document.getElementById('statComing').textContent = 0;
+        document.getElementById('statGuests').textContent = 0;
+        return;
+      }
+      const entries = Object.values(data);
+      const coming = entries.filter(e => e.attending);
+      const totalGuests = coming.reduce((s, e) => s + (e.guests || 0), 0);
+      document.getElementById('statTotal').textContent = entries.length;
+      document.getElementById('statComing').textContent = coming.length;
+      document.getElementById('statGuests').textContent = totalGuests;
+      const entriesWithKeys = Object.entries(data);
+      entriesWithKeys.sort((a, b) => (b[1].timestamp || 0) - (a[1].timestamp || 0));
+      list.innerHTML = entriesWithKeys.map(([key, e]) => `
+        <div class="guest-row">
+          <div class="guest-name">${e.name}</div>
+          ${e.attending ? `<div class="guest-count">${e.guests} אנשים</div>` : ''}
+          <div class="guest-badge ${e.attending ? 'badge-yes' : 'badge-no'}">${e.attending ? 'מגיע' : 'לא מגיע'}</div>
+          <button class="delete-btn" onclick="deleteRsvp('${key}', '${e.name}')">מחק</button>
+        </div>`).join('');
+    });
+  }
+  window.loadAdminData = loadAdminData;
+
+  // ===== DELETE RSVP =====
+  async function deleteRsvp(key, name) {
+    const first = confirm(`האם אתה בטוח שרוצה למחוק את ${name}?`);
+    if (!first) return;
+    const second = confirm(`⚠️ שים לב! מחיקה של ${name} היא סופית ולא ניתן לשחזר.\nלהמשיך?`);
+    if (!second) return;
+    const entryRef = window._ref(window._db, 'henna_rsvp/' + key);
+    await window._remove(entryRef);
+  }
+  window.deleteRsvp = deleteRsvp;
+</script>
+</body>
+</html>
