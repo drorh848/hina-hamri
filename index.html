@@ -365,6 +365,7 @@
   const rsvpRef = ref(db, 'henna_rsvp');
 
   window._db = db;
+  window._ref = ref;
   window._rsvpRef = rsvpRef;
   window._push = push;
   window._onValue = onValue;
@@ -502,7 +503,6 @@
       }
       const entryRef = window._ref(window._db, 'henna_rsvp/' + key);
       await window._remove(entryRef);
-      loadAdminData();
     } catch(e) {
       alert('שגיאה במחיקה: ' + e.message);
     }
