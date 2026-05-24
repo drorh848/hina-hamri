@@ -491,8 +491,18 @@
     if (!first) return;
     const second = confirm(`⚠️ שים לב! מחיקה של ${name} היא סופית ולא ניתן לשחזר.\nלהמשיך?`);
     if (!second) return;
-    const entryRef = window._ref(window._db, 'henna_rsvp/' + key);
-    await window._remove(entryRef);
+    try {
+      if (!window._ref || !window._db || !window._remove) {
+        alert('שגיאה: Firebase לא מוכן. נסה שוב.');
+        return;
+      }
+      const entryRef = window._ref(window._db, 'henna_rsvp/' + key);
+      await window._remove(entryRef);
+      // רענן את הרשימה
+      loadAdminData();
+    } catch(e) {
+      alert('שגיאה במחיקה: ' + e.message);
+    }
   }
   window.deleteRsvp = deleteRsvp;
 </script>
