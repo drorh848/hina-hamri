@@ -492,12 +492,14 @@
     const second = confirm(`⚠️ שים לב! מחיקה של ${name} היא סופית ולא ניתן לשחזר.\nלהמשיך?`);
     if (!second) return;
 
-    // המתן ל-Firebase אם צריך
-    if (!window._firebaseReady) {
-      await new Promise(resolve => window.addEventListener('firebaseReady', resolve, { once: true }));
-    }
-
     try {
+      // המתן ל-Firebase אם צריך
+      let attempts = 0;
+      while (!window._ref || !window._db || !window._remove) {
+        await new Promise(r => setTimeout(r, 300));
+        attempts++;
+        if (attempts > 20) { alert('Firebase לא זמין, נסה שוב'); return; }
+      }
       const entryRef = window._ref(window._db, 'henna_rsvp/' + key);
       await window._remove(entryRef);
       loadAdminData();
