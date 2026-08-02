@@ -262,6 +262,10 @@
     <div class="form-subtitle">חינה | אמרי וליטל</div>
     <div class="gold-divider"><span>✦</span></div>
 
+    <div id="alreadyNote" style="display:none; background:rgba(212,175,55,0.12);
+      border:1px solid rgba(212,175,55,0.4); border-radius:10px; padding:12px 14px;
+      margin-bottom:18px; font-size:13px; line-height:1.6; color:#f0e0bd; text-align:center;"></div>
+
     <div class="form-group">
       <label class="form-label">שם מלא</label>
       <input class="form-input" id="guestName" type="text" placeholder="הכנס/י את שמך המלא" />
@@ -347,7 +351,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getDatabase, ref, push, onValue, serverTimestamp, remove }
+  import { getDatabase, ref, push, onValue, serverTimestamp, remove, get, set }
     from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
   const firebaseConfig = {
@@ -371,6 +375,8 @@
   window._onValue = onValue;
   window._serverTimestamp = serverTimestamp;
   window._remove = remove;
+  window._get = get;
+  window._set = set;
   window._firebaseReady = true;
   window.dispatchEvent(new Event('firebaseReady'));
 </script>
@@ -379,6 +385,72 @@
   let attending = null;
   let guestCount = 1;
   const ADMIN_PASSWORD = "Hamri2026";
+
+  // ===== קישור אישי =====
+  // כתובת בצורה: ...?g=amri_-Nx1abc  →  צד = amri, מזהה = -Nx1abc
+  let guestId    = null;   // המזהה מהקישור (null אם נכנסו לקישור כללי)
+  let isUpdate   = false;  // האם כבר קיים אישור עבור המזהה הזה
+
+  function readGuestIdFromUrl() {
+    try {
+      const p = new URLSearchParams(window.location.search).get('g');
+      if (!p) return null;
+      const clean = p.trim();
+      // מפתח חוקי בפיירבייס בלבד
+      if (!clean || /[.#$\[\]\/]/.test(clean)) return null;
+      return clean;
+    } catch (e) { return null; }
+  }
+
+  async function initPersonalLink() {
+    guestId = readGuestIdFromUrl();
+    if (!guestId) return;
+
+    if (!window._firebaseReady) {
+      window.addEventListener('firebaseReady', initPersonalLink, { once: true });
+      return;
+    }
+
+    const sep = guestId.indexOf('_');
+    if (sep < 1) return;
+    const userKey = guestId.slice(0, sep);
+    const fireKey = guestId.slice(sep + 1);
+    if (!userKey || !fireKey) return;
+
+    try {
+      // שליפת פרטי המוזמן מרשימת המוזמנים
+      const gSnap = await window._get(window._ref(window._db, `guests/${userKey}/${fireKey}`));
+      if (gSnap.exists()) {
+        const g = gSnap.val() || {};
+        if (g.name)  document.getElementById('guestName').value  = g.name;
+        if (g.phone) document.getElementById('guestPhone').value = g.phone;
+      }
+
+      // בדיקה אם כבר נשלח אישור עבור המזהה הזה
+      const rSnap = await window._get(window._ref(window._db, 'henna_rsvp/' + guestId));
+      if (rSnap.exists()) {
+        const r = rSnap.val() || {};
+        isUpdate = true;
+        if (typeof r.attending === 'boolean') {
+          guestCount = r.guests && r.guests > 0 ? r.guests : 1;
+          document.getElementById('countDisplay').textContent = guestCount;
+          setAttendance(r.attending);
+        }
+        const note = document.getElementById('alreadyNote');
+        if (note) {
+          note.textContent = r.attending
+            ? `כבר אישרת הגעה ל-${r.guests} אנשים. אפשר לעדכן ולשלוח שוב.`
+            : 'כבר עדכנת שלא תגיע/י. אפשר לשנות ולשלוח שוב.';
+          note.style.display = 'block';
+        }
+        const btn = document.getElementById('submitBtn');
+        if (btn) btn.textContent = 'עדכן אישור';
+      }
+    } catch (e) {
+      // אם משהו נכשל — הטופס פשוט נשאר ידני כרגיל
+    }
+    checkForm();
+  }
 
   function showPage(id) {
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -422,14 +494,25 @@
     if (phone.startsWith('972')) phone = '0' + phone.slice(3);
     const data = { name, phone, attending, guests: attending ? guestCount : 0,
       timestamp: window._serverTimestamp ? window._serverTimestamp() : Date.now() };
+    if (guestId) data.guestId = guestId;
     try {
-      if (window._firebaseReady) await window._push(window._rsvpRef, data);
+      if (window._firebaseReady) {
+        if (guestId) {
+          // קישור אישי — נשמר תחת מפתח קבוע, כך שמילוי חוזר מעדכן ולא מכפיל
+          await window._set(window._ref(window._db, 'henna_rsvp/' + guestId), data);
+        } else {
+          await window._push(window._rsvpRef, data);
+        }
+      }
       const icon = document.getElementById('successIcon');
       const title = document.getElementById('successTitle');
       const msg = document.getElementById('successMsg');
       if (attending) {
         icon.textContent = '🎉'; title.textContent = 'מחכים לך!';
-        msg.innerHTML = `${name} יקיר/ה,<br>אישרת הגעה ל<strong>${guestCount}</strong> אנשים.<br><br>נשמח לראותך בחינה! 🌿<br><br><span style="font-size:12px;opacity:0.6;">⚠️ אם הטלפון שרשמת שגוי — האישור לא יזוהה. במקרה של טעות, אנא מלא את הטופס שוב עם הטלפון הנכון.</span>`;
+        const warn = guestId
+          ? ''
+          : `<br><br><span style="font-size:12px;opacity:0.6;">⚠️ אם הטלפון שרשמת שגוי — האישור לא יזוהה. במקרה של טעות, אנא מלא את הטופס שוב עם הטלפון הנכון.</span>`;
+        msg.innerHTML = `${name} יקיר/ה,<br>אישרת הגעה ל<strong>${guestCount}</strong> אנשים.<br><br>נשמח לראותך בחינה! 🌿${warn}`;
       } else {
         icon.textContent = '💛'; title.textContent = 'תודה על העדכון';
         msg.innerHTML = `${name} יקיר/ה,<br>קיבלנו את הודעתך.<br><br>יהיה חסר לנו. שיהיה בשעה טובה! 🌿`;
@@ -509,6 +592,9 @@
     }
   }
   window.deleteRsvp = deleteRsvp;
+
+  // ===== הפעלה =====
+  initPersonalLink();
 </script>
 </body>
 </html>
