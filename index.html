@@ -271,7 +271,7 @@
       <input class="form-input" id="guestName" type="text" placeholder="הכנס/י את שמך המלא" />
     </div>
 
-    <div class="form-group">
+    <div class="form-group" id="phoneGroup">
       <label class="form-label">טלפון</label>
       <input class="form-input" id="guestPhone" type="tel" placeholder="050-0000000" />
       <div style="font-size:11px; color:rgba(253,246,232,0.35); margin-top:6px; letter-spacing:0.5px;">
@@ -389,6 +389,7 @@
   // ===== קישור אישי =====
   // כתובת בצורה: ...?g=amri_-Nx1abc  →  צד = amri, מזהה = -Nx1abc
   let guestId    = null;   // המזהה מהקישור (null אם נכנסו לקישור כללי)
+  let linkedPhone = '';    // הטלפון מרשימת המוזמנים — נשמר ברקע, לא מוצג
   let isUpdate   = false;  // האם כבר קיים אישור עבור המזהה הזה
 
   function readGuestIdFromUrl() {
@@ -423,8 +424,13 @@
       if (gSnap.exists()) {
         const g = gSnap.val() || {};
         if (g.name)  document.getElementById('guestName').value  = g.name;
-        if (g.phone) document.getElementById('guestPhone').value = g.phone;
+        // הטלפון נלקח מרשימת המוזמנים ונשמר ברקע — המוזמן לא צריך להקליד אותו
+        linkedPhone = g.phone || '';
+        document.getElementById('guestPhone').value = linkedPhone;
       }
+      // בקישור אישי אין צורך בטלפון לזיהוי — המזהה עושה את העבודה
+      const pg = document.getElementById('phoneGroup');
+      if (pg) pg.style.display = 'none';
 
       // בדיקה אם כבר נשלח אישור עבור המזהה הזה
       const rSnap = await window._get(window._ref(window._db, 'henna_rsvp/' + guestId));
@@ -476,9 +482,10 @@
   window.changeCount = changeCount;
 
   function checkForm() {
-    const name = document.getElementById('guestName').value.trim();
+    const name  = document.getElementById('guestName').value.trim();
     const phone = document.getElementById('guestPhone').value.trim();
-    document.getElementById('submitBtn').disabled = !(name.length >= 2 && phone.length >= 9 && attending !== null);
+    const phoneOk = guestId ? true : phone.length >= 9;   // בקישור אישי הטלפון אינו נדרש
+    document.getElementById('submitBtn').disabled = !(name.length >= 2 && phoneOk && attending !== null);
   }
   document.getElementById('guestName').addEventListener('input', checkForm);
   document.getElementById('guestPhone').addEventListener('input', checkForm);
@@ -488,7 +495,7 @@
     if (!name || attending === null) return;
     const btn = document.getElementById('submitBtn');
     btn.disabled = true; btn.textContent = 'שולח...';
-    const rawPhone = document.getElementById('guestPhone').value.trim();
+    const rawPhone = (guestId ? linkedPhone : document.getElementById('guestPhone').value).trim();
     let phone = rawPhone.replace(/[-\s().+]/g, '');
     phone = phone.replace(/[oO]/g, '0');
     if (phone.startsWith('972')) phone = '0' + phone.slice(3);
